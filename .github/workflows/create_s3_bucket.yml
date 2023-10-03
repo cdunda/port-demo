@@ -1,5 +1,4 @@
 name: Add new s3 bucket
-
 on:
   workflow_dispatch:
     inputs:
@@ -11,6 +10,9 @@ on:
         required: true
         description: "Port's payload, including details for who triggered the action and general context (blueprint, run id, etc...)"
         type: string
+env:
+  NAME: ${{ inputs.name }}
+  REGION: ${{ inputs.region }}
 
 jobs:
   commit_tfvar:
@@ -21,9 +23,6 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Parse inputs and create TFVar file
-        env:
-          NAME: ${{ github.event.inputs.name }}
-          REGION: ${{ github.event.inputs.region }}
         run: |
           echo "bucket_name = \"$NAME\"" > s3-buckets/tfvars/$NAME.tfvar
           echo "region = \"$REGION\"" >> s3-buckets/tfvars/$NAME.tfvar
@@ -39,7 +38,12 @@ jobs:
       - name: Push branch
         run: git push origin feature/add-$NAME-tfvar
 
+  create_pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
       - name: Create Pull Request
-        run: |
-          gh auth login --with-token ${{ secrets.GITHUB_TOKEN }}
-          gh pr create --base main --head feature/add-$NAME-tfvar --title "Add TFVar for $NAME" --body "This PR adds a new TFVar file for $NAME."
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr create --head feature/add-$NAME-tfvar --title "Add TFVar for $NAME" --body "This PR adds a new TFVar file for $NAME."
