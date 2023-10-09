@@ -22,17 +22,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Parse inputs and create TFVar file
+      - name: Parse inputs and create TFVars file
         run: |
-          echo "bucket_name = \"$NAME\"" > s3-buckets/tfvars/$NAME.tfvar
-          echo "region = \"$REGION\"" >> s3-buckets/tfvars/$NAME.tfvar
+          echo "bucket_name = \"$NAME\"" > s3-buckets/tfvars/$NAME.tfvars
+          echo "region = \"$REGION\"" >> s3-buckets/tfvars/$NAME.tfvars
 
       - name: Commit TFVar file
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git checkout -b feature/add-$NAME-tfvar
-          git add s3-buckets/tfvars/*.tfvar
+          git checkout -b feature/add-$NAME-tfvars
+          git add s3-buckets/tfvars/*.tfvars
           git commit -m "Add new TFVar file for $NAME"
 
       - name: Push branch
