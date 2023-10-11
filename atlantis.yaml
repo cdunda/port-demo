@@ -1,0 +1,3 @@
+---
+# auto: ["s3-buckets"]
+version: 3

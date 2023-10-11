@@ -1,9 +1,10 @@
 terraform {
   required_version = ">= 1.5.7"
   backend "s3" {
-    bucket = "2u-terraform-devops-sandbox"
-    key    = "cdunda/port-demo/s3-buckets/terraform.tfstate"
-    region = "us-west-2"
+    bucket   = "2u-terraform-devops-sandbox"
+    key      = "cdunda/port-demo/s3-buckets/terraform.tfstate"
+    region   = "us-east-1"
+    role_arn = "arn:aws:iam::516590517042:role/OrganizationAccountAccessRole"
   }
 }
 
