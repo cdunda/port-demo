@@ -46,4 +46,4 @@ jobs:
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh pr create --head feature/add-$NAME-tfvar --title "Add TFVar for $NAME" --body "This PR adds a new TFVar file for $NAME."
+        run: gh pr create --head feature/add-$NAME-tfvar --title "Add TFVar for bucket $NAME" --body "This PR adds a new TFVar file for bucket $NAME."
