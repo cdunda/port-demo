@@ -1,9 +1,9 @@
 terraform {
   required_version = ">= 1.5.7"
   backend "s3" {
-    bucket = "2u-terraform"
+    bucket = "2u-terraform-devops-sandbox"
     key    = "cdunda/port-demo/s3-buckets/terraform.tfstate"
-    region = "us-west-2"
+    region = "us-east-1"
   }
 }
 
