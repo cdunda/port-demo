@@ -2,14 +2,18 @@ name: Print Payload
 
 on:
   workflow_dispatch:
-    inputs:
+    inputs: # keep empty to print any inputs
       name:
         type: string
-      region:
+      saas_provider:
+        type: string
+      object_storage_backends:
         type: string
       port_payload:
         required: true
-        description: Port's payload, including details for who triggered the action and general context (blueprint, run id, etc...)
+        description:
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
         type: string
 
 jobs:
