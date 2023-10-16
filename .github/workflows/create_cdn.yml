@@ -1,0 +1,61 @@
+name: Create CDN
+
+on:
+  workflow_dispatch:
+    inputs: # keep empty to print any inputs
+      name:
+        type: string
+      saas_provider:
+        type: string
+      hosted_zone:
+        type: string
+      aliases:
+        type: string
+      object_storage_backends:
+        type: string
+      custom_backends:
+        type: string
+      port_payload:
+        required: true
+        description:
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+        type: string
+env:
+  NAME: ${{ toJson(github.event.inputs.aliases)[0] }}.${{ toJson(github.event.inputs.hosted_zone) }}
+
+jobs:
+  create_cdn:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Print payload
+        run: |
+          echo '${{ toJson(github.event.inputs) }}' | jq
+
+      - name: Parse inputs and create TFVars file
+        run: |
+          echo '${{ toJson(github.event.inputs) }}' | jq > cloudfronts/tfvars/$NAME.tfvars
+
+      - name: Commit and TFVar file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout -b feature/cloudfront/add-$NAME-tfvars
+          git add cloudfronts/tfvars/*.tfvars
+          git commit -m "Add new TFVar file for $NAME"
+
+      - name: Push branch
+        run: git push origin feature/cloudfront/add-$NAME-tfvars
+
+  # create_pr:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+  #     - name: Create Pull Request
+  #       env:
+  #         GH_TOKEN: ${{ github.token }}
+  #       run: gh pr create --head feature/add-$NAME-tfvars --title "Add TFVar for bucket $NAME" --body "This PR adds a new TFVar file for bucket $NAME."
