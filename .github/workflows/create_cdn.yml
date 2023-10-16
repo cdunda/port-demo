@@ -37,7 +37,7 @@ jobs:
           identifier: ${{ github.event.inputs.hosted_zone }}
           blueprint: hosted_zone
 
-  create_cdn:
+  create-cdn:
     runs-on: ubuntu-latest
     needs: get-hosted-zone-entity
     steps:
@@ -51,21 +51,21 @@ jobs:
       - name: Parse inputs and create TFVars file
         run: |
           FIRST_ALIAS=$(echo '${{ github.event.inputs.aliases }}' | jq -r '.[0]')
-          HOSTED_ZONE_NAME=$(echo '${{ needs.get-hosted-zone-entity.outputs.entity }}' | jq -r '.title')
-          echo "NAME=$FIRST_ALIAS.$HOSTED_ZONE_NAME" >> $GITHUB_ENV
+          HOSTED_ZONE_NAME=$(echo '${{ needs.get-hosted-zone-entity.outputs.entity }}' | jq -r '.title| sub("\\.$"; "")') #strip trailing dot
+          NAME="${FIRST_ALIAS}.${HOSTED_ZONE_NAME}" && echo "NAME=$NAME" >> $GITHUB_ENV
 
-          echo '${{ toJson(github.event.inputs) }}' | jq > cloudfronts/tfvars/$NAME.tfvars
+          echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py > cloudfronts/tfvars/$NAME.tfvars.json
 
       - name: Commit and TFVar file
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git checkout -b feature/cloudfront/add-$NAME-tfvars
-          git add cloudfronts/tfvars/*.tfvars
+          git checkout -b feature/cloudfront/add/$NAME.tfvars
+          git add cloudfronts/tfvars/$NAME.tfvars.json
           git commit -m "Add new TFVar file for $NAME"
 
       - name: Push branch
-        run: git push origin feature/cloudfront/add-$NAME-tfvars
+        run: git push origin feature/cloudfront/add/$NAME.tfvars
 
   # create_pr:
   #   runs-on: ubuntu-latest
