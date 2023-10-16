@@ -21,8 +21,6 @@ on:
           Port's payload, including details for who triggered the action and
           general context (blueprint, run id, etc...)
         type: string
-env:
-  NAME: ${{ toJson(github.event.inputs.aliases)[0] }}.${{ toJson(github.event.inputs.hosted_zone) }}
 
 jobs:
   create_cdn:
@@ -37,6 +35,9 @@ jobs:
 
       - name: Parse inputs and create TFVars file
         run: |
+          FIRST_ALIAS=$(echo '${{ github.event.inputs.aliases }}' | jq -r '.[0]')
+          echo "NAME=$FIRST_ALIAS.${{ github.event.inputs.hosted_zone }}" >> $GITHUB_ENV
+
           echo '${{ toJson(github.event.inputs) }}' | jq > cloudfronts/tfvars/$NAME.tfvars
 
       - name: Commit and TFVar file
