@@ -1,0 +1,36 @@
+name: Port GitHub Action
+on:
+  workflow_dispatch:
+    inputs:
+      hosted_zone_id:
+        type: string
+
+jobs:
+  get-entity:
+    runs-on: ubuntu-latest
+    outputs:
+      entity: ${{ steps.port-github-action.outputs.entity }}
+    steps:
+      - id: port-github-action
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: GET
+          identifier: ${{ github.event.inputs.hosted_zone_id }}
+          blueprint: hosted_zone
+
+  use-entity:
+    runs-on: ubuntu-latest
+    needs: get-entity
+    steps:
+      - name: Parse Entity Output
+        id: parse
+        run: |
+          HOSTED_ZONE=$(echo '${{needs.get-entity.outputs.entity}}' | jq -r '.properties.hosted_zone')
+          echo "HOSTED_ZONE=$HOSTED_ZONE" >> $GITHUB_ENV
+
+      - name: Use Hosted Zone
+        run: echo "The value of the hosted_zone is $HOSTED_ZONE"
+
+      # Further steps that can use $HOSTED_ZONE
