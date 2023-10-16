@@ -23,8 +23,23 @@ on:
         type: string
 
 jobs:
+  get-hosted-zone-entity:
+    runs-on: ubuntu-latest
+    outputs:
+      entity: ${{ steps.port-github-action.outputs.entity }}
+    steps:
+      - id: port-github-action
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: GET
+          identifier: ${{ github.event.inputs.hosted_zone }}
+          blueprint: hosted_zone
+
   create_cdn:
     runs-on: ubuntu-latest
+    needs: get-hosted-zone-entity
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -36,7 +51,8 @@ jobs:
       - name: Parse inputs and create TFVars file
         run: |
           FIRST_ALIAS=$(echo '${{ github.event.inputs.aliases }}' | jq -r '.[0]')
-          echo "NAME=$FIRST_ALIAS.${{ github.event.inputs.hosted_zone }}" >> $GITHUB_ENV
+          HOSTED_ZONE_NAME=$(echo '${{ needs.get-hosted-zone-entity.outputs.entity }}' | jq -r '.title')
+          echo "NAME=$FIRST_ALIAS.$HOSTED_ZONE_NAME" >> $GITHUB_ENV
 
           echo '${{ toJson(github.event.inputs) }}' | jq > cloudfronts/tfvars/$NAME.tfvars
 
