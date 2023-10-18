@@ -3,24 +3,6 @@ name: Create CDN
 on:
   workflow_dispatch:
     inputs:
-      name:
-        type: string
-      object_storage_origins:
-        type: string
-      hosted_zone:
-        type: string
-      aliases:
-        type: string
-      custom_origins:
-        type: string
-      cors_response_headers:
-        type: string
-      origin_request_headers:
-        type: string
-      cache_policy:
-        type: string
-      ssl_cert:
-        type: string
       port_payload:
         required: true
         description:
@@ -34,6 +16,10 @@ jobs:
     outputs:
       entity: ${{ steps.port-github-action.outputs.entity }}
     steps:
+      - name: Print payload
+        run: |
+          echo '${{ toJson(github.event.inputs) }}' | jq
+
       - id: port-github-action
         uses: port-labs/port-github-action@v1
         with:
@@ -49,10 +35,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Print payload
-        run: |
-          echo '${{ toJson(github.event.inputs) }}' | jq
 
       - name: Parse inputs and create TFVars file
         run: |
