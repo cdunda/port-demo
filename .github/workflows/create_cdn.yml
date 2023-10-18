@@ -11,38 +11,40 @@ on:
         type: string
 
 jobs:
-  get-hosted-zone-entity:
+  create_cdn_pull_request:
     runs-on: ubuntu-latest
     outputs:
       entity: ${{ steps.port-github-action.outputs.entity }}
     steps:
-      - name: Print payload
-        run: |
-          echo '${{ toJson(github.event.inputs) }}' | jq
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - id: port-github-action
+      - name: Parse payload metadata
+        id: parse-payload
+        run: |
+          echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py > port_payload.json
+          hosted_zone=$(jq -r '.port_payload.payload.properties.hosted_zone' port_payload.json)
+          echo ::set-output name=hosted_zone=$hosted_zone
+          aliases=$(jq -r '.port_payload.payload.properties.aliases' port_payload.json)
+          echo ::set-output name=aliases=$aliases
+
+      - name: Get hosted zone entity
+        id: port-github-action
         uses: port-labs/port-github-action@v1
         with:
           clientId: ${{ secrets.PORT_CLIENT_ID }}
           clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
           operation: GET
-          identifier: ${{ github.event.inputs.hosted_zone }}
+          identifier: ${{ steps.parse-payload.outputs.hosted_zone }}
           blueprint: hosted_zone
-
-  create-cdn:
-    runs-on: ubuntu-latest
-    needs: get-hosted-zone-entity
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
       - name: Parse inputs and create TFVars file
         run: |
-          FIRST_ALIAS=$(echo '${{ github.event.inputs.aliases }}' | jq -r '.[0]')
-          HOSTED_ZONE_NAME=$(echo '${{ needs.get-hosted-zone-entity.outputs.entity }}' | jq -r '.title| sub("\\.$"; "")') #strip trailing dot
+          FIRST_ALIAS=$(echo '${{ steps.parse-payload.outputs.aliases }}' | jq -r '.[0]')
+          HOSTED_ZONE_NAME=$(echo '${{ steps.port-github-action.outputs.entity }}' | jq -r '.title| sub("\\.$"; "")') #strip trailing dot
           NAME="${FIRST_ALIAS}.${HOSTED_ZONE_NAME}" && echo "NAME=$NAME" >> $GITHUB_ENV
 
-          echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py > cloudfronts/tfvars/$NAME.tfvars.json
+          jq -r '.port_payload.payload.properties' port_payload.json > cloudfronts/tfvars/$NAME.tfvars.json
 
       - name: Commit and TFVar file
         run: |
