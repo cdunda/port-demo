@@ -2,18 +2,26 @@ name: Create CDN
 
 on:
   workflow_dispatch:
-    inputs: # keep empty to print any inputs
+    inputs:
       name:
         type: string
       saas_provider:
+        type: string
+      object_storage_origins:
         type: string
       hosted_zone:
         type: string
       aliases:
         type: string
-      object_storage_backends:
+      custom_origins:
         type: string
-      custom_backends:
+      cors_response_headers:
+        type: string
+      origin_request_headers:
+        type: string
+      cache_policy:
+        type: string
+      ssl_cert:
         type: string
       port_payload:
         required: true
