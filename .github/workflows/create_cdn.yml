@@ -48,7 +48,7 @@ jobs:
     needs: get-hosted-zone-entity
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Print payload
         run: |
