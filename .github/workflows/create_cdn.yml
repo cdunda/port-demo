@@ -24,9 +24,9 @@ jobs:
         run: |
           echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py > port_payload.json
           hosted_zone=$(jq -r '.port_payload.payload.properties.hosted_zone' port_payload.json)
-          echo ::set-output name=hosted_zone=$hosted_zone
+          echo hosted_zone=$hosted_zone >> $GITHUB_OUTPUT
           aliases=$(jq -r '.port_payload.payload.properties.aliases' port_payload.json)
-          echo ::set-output name=aliases=$aliases
+          echo aliases=$aliases >> $GITHUB_OUTPUT
 
       - name: Get hosted zone entity
         id: port-github-action
