@@ -5,8 +5,6 @@ on:
     inputs:
       name:
         type: string
-      saas_provider:
-        type: string
       object_storage_origins:
         type: string
       hosted_zone:
