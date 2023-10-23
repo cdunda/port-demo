@@ -39,6 +39,7 @@ jobs:
         run: git push origin feature/add-$NAME-tfvars
 
   create_pr:
+    needs: commit_tfvar
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
