@@ -19,7 +19,21 @@ provider "aws" {
   skip_metadata_api_check     = true
   skip_region_validation      = true
   skip_credentials_validation = true
-  skip_requesting_account_id  = true
+}
+
+data "aws_iam_policy_document" "cloudfront-bucket-policy" {
+
+  statement {
+    actions = ["s3:GetObject"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cloudfront.amazonaws.com"]
+    }
+
+    resources = ["arn:aws:s3:::${var.bucket_name}/*"]
+
+  }
 }
 
 module "simple_bucket" {
@@ -28,4 +42,6 @@ module "simple_bucket" {
 
   bucket        = var.bucket_name
   force_destroy = true
+  attach_policy = true
+  policy        = data.aws_iam_policy_document.cloudfront-bucket-policy.json
 }
