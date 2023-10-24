@@ -24,8 +24,8 @@ locals {
 
   s3_origins = {
     for s3bucket in var.object_storage_origins : s3bucket => merge(local.origin_defaults, {
-      domain_name           = data.aws_s3_bucket.this[s3bucket].bucket_regional_domain_name
-      origin_access_control = "s3_oac"
+      domain_name              = data.aws_s3_bucket.this[s3bucket].bucket_regional_domain_name
+      origin_access_control_id = "E3SF69DXKY5VS5"
     })
   }
 
@@ -65,14 +65,24 @@ locals {
     use_forwarded_values      = false
   }
 
-  ordered_cache_behaviors = [for cache_behavior in var.ordered_cache_behaviors : merge(
-    local.cache_behavior_defaults,
-    cache_behavior
-  )]
+  # ensure s3 origins use the s3 origin request policy
+  ordered_cache_behaviors = [
+    for cache_behavior in var.ordered_cache_behaviors : merge(
+      local.cache_behavior_defaults,
+      cache_behavior,
+      {
+        origin_request_policy_id = contains(var.object_storage_origins, cache_behavior.target_origin_id) ? data.aws_cloudfront_origin_request_policy.s3.id : local.cache_behavior_defaults.origin_request_policy_id
+      }
+    )
+  ]
+
 
   default_cache_behavior = merge(
     local.cache_behavior_defaults,
-    var.default_cache_behavior
+    var.default_cache_behavior,
+    {
+      origin_request_policy_id = contains(var.object_storage_origins, var.default_cache_behavior.target_origin_id) ? data.aws_cloudfront_origin_request_policy.s3.id : local.cache_behavior_defaults.origin_request_policy_id
+    }
   )
 
 }

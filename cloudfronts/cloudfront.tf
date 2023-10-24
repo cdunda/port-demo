@@ -14,6 +14,10 @@ data "aws_s3_bucket" "this" {
 #     #      origin_access_control_id = "E345SXM82MIOSU" # external OAС resource
 #   }
 
+data "aws_cloudfront_origin_request_policy" "s3" {
+  name = "Managed-CORS-S3Origin"
+}
+
 data "aws_cloudfront_origin_request_policy" "this" {
   name = "Managed-${var.origin_request_headers}"
 }
