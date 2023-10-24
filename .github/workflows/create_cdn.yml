@@ -11,7 +11,7 @@ on:
         type: string
 
 jobs:
-  create_cdn_pull_request:
+  create_cdn:
     runs-on: ubuntu-latest
     outputs:
       entity: ${{ steps.port-github-action.outputs.entity }}
@@ -50,19 +50,14 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git checkout -b feature/cloudfront/add/$NAME.tfvars
+          git checkout -b chore/cloudfront/add/$NAME.tfvars.json
           git add cloudfronts/tfvars/$NAME.tfvars.json
           git commit -m "Add new TFVar file for $NAME"
 
       - name: Push branch
-        run: git push origin feature/cloudfront/add/$NAME.tfvars
+        run: git push origin chore/cloudfront/add/$NAME.tfvars.json
 
-  # create_pr:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
-  #     - name: Create Pull Request
-  #       env:
-  #         GH_TOKEN: ${{ github.token }}
-  #       run: gh pr create --head feature/add-$NAME-tfvars --title "Add TFVar for bucket $NAME" --body "This PR adds a new TFVar file for bucket $NAME."
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr create --head chore/cloudfront/add/$NAME.tfvars.json --title "Add TFVar for bucket $NAME" --body "This PR adds a new TFVar file for bucket $NAME."
