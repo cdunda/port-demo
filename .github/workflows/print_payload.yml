@@ -3,14 +3,6 @@ name: Print Payload
 on:
   workflow_dispatch:
     inputs: # keep empty to print any inputs
-      name:
-        type: string
-      saas_provider:
-        type: string
-      object_storage_backends:
-        type: string
-      custom_backends:
-        type: string
       port_payload:
         required: true
         description:
@@ -27,4 +19,4 @@ jobs:
 
       - name: Print payload
         run: |
-          echo '${{ toJson(github.event.inputs) }}' | jq
+          echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py | jq
