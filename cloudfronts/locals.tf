@@ -38,7 +38,7 @@ locals {
     )
   }
 
-  origins = merge(local.s3_origins, local.custom_origins)
+  origins = merge(local.custom_origins, local.s3_origins)
 
 
   cache_behavior_defaults = {
