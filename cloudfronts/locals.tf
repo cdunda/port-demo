@@ -65,7 +65,7 @@ locals {
     use_forwarded_values      = false
   }
 
-  # ensure s3 origins use the s3 origin request policy
+  # ensure if it's an s3 origin, it uses the s3 origin request policy
   ordered_cache_behaviors = [
     for cache_behavior in var.ordered_cache_behaviors : merge(
       local.cache_behavior_defaults,
@@ -76,7 +76,7 @@ locals {
     )
   ]
 
-
+  # ensure if it's an s3 origin, it uses the s3 origin request policy
   default_cache_behavior = merge(
     local.cache_behavior_defaults,
     var.default_cache_behavior,
