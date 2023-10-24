@@ -28,7 +28,7 @@ jobs:
 
       - name: Parse inputs and create TFVars file
         run: |
-          echo "delete= true" >> s3-buckets/tfvars/${{ steps.parse-payload.outputs.NAME }}.tfvars
+          echo "delete = true" >> s3-buckets/tfvars/${{ steps.parse-payload.outputs.NAME }}.tfvars
 
       - name: Commit and Push TFVar file
         run: |
