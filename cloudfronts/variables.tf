@@ -50,7 +50,7 @@ variable "ssl_cert" {
 
 variable "default_cache_behavior" {
   description = "The default cache behavior"
-  type        = map(any)
+  type        = any
 }
 
 variable "ordered_cache_behaviors" {
