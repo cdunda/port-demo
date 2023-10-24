@@ -44,7 +44,7 @@ module "cloudfront" {
   # This rate is charged only once per month, per metric (up to 8 metrics per distribution).
   create_monitoring_subscription = true
 
-  create_origin_access_control = true
+  create_origin_access_control = false
   origin_access_control = {
     s3_oac = {
       description      = "CloudFront access to S3"
@@ -62,7 +62,7 @@ module "cloudfront" {
   origin = local.origins
 
   # put this into local and merge with users default_cache_behavior
-  default_cache_behavior = var.default_cache_behavior
+  default_cache_behavior = local.default_cache_behavior
 
   ordered_cache_behavior = local.ordered_cache_behaviors
 

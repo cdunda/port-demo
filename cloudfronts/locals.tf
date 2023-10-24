@@ -62,11 +62,17 @@ locals {
     lambda_function_associations = [] # Empty list as it's optional
 
     field_level_encryption_id = "" # Empty as it's optional
+    use_forwarded_values      = false
   }
 
   ordered_cache_behaviors = [for cache_behavior in var.ordered_cache_behaviors : merge(
     local.cache_behavior_defaults,
     cache_behavior
   )]
+
+  default_cache_behavior = merge(
+    local.cache_behavior_defaults,
+    var.default_cache_behavior
+  )
 
 }
