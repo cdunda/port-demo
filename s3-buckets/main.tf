@@ -37,6 +37,7 @@ data "aws_iam_policy_document" "cloudfront-bucket-policy" {
 }
 
 module "simple_bucket" {
+  count   = var.delete ? 0 : 1
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "3.15.1"
 
