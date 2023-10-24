@@ -1,0 +1,53 @@
+name: Delete S3 Bucket
+
+on:
+  workflow_dispatch:
+    inputs:
+      port_payload:
+        required: true
+        description: >
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+        type: string
+
+jobs:
+  delete_s3_bucket:
+    runs-on: ubuntu-latest
+    outputs:
+      entity: ${{ steps.parse-payload.outputs.NAME}}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Parse payload metadata
+        id: parse-payload
+        run: |
+          echo '${{ toJSON(github.event.inputs) }}' | python .github/scripts/parse_json.py > port_payload.json
+          NAME=$(jq -r '.port_payload.payload.entity.identifier' port_payload.json)
+          echo "NAME=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Parse inputs and create TFVars file
+        run: |
+          echo "delete = true" >> s3-buckets/tfvars/${{ steps.parse-payload.outputs.NAME }}.tfvars
+
+      - name: Commit and Push TFVar file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout -b chore/delete-${{ steps.parse-payload.outputs.NAME }}-tfvars
+          git add s3-buckets/tfvars/*.tfvars
+          git commit -m "Delete S3 Bucket: ${{ steps.parse-payload.outputs.NAME }}"
+          git push origin chore/delete-${{ steps.parse-payload.outputs.NAME }}-tfvars
+
+  create_pr:
+    needs: delete_s3_bucket
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ needs.delete_s3_bucket.outputs.entity }}
+        run: gh pr create --head chore/delete-${NAME}-tfvars --title "Add delete=true to TFVar for bucket $NAME" --body "This PR triggers a deletion of the bucket $NAME."
