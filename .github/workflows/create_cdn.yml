@@ -1,0 +1,63 @@
+name: Create CDN
+
+on:
+  workflow_dispatch:
+    inputs:
+      port_payload:
+        required: true
+        description:
+          Port's payload, including details for who triggered the action and
+          general context (blueprint, run id, etc...)
+        type: string
+
+jobs:
+  create_cdn:
+    runs-on: ubuntu-latest
+    outputs:
+      entity: ${{ steps.port-github-action.outputs.entity }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Parse payload metadata
+        id: parse-payload
+        run: |
+          echo '${{ toJson(github.event.inputs) }}' | python .github/scripts/parse_json.py > port_payload.json
+          hosted_zone=$(jq -r '.port_payload.payload.properties.hosted_zone' port_payload.json)
+          echo hosted_zone=$hosted_zone >> $GITHUB_OUTPUT
+          aliases=$(jq -r '.port_payload.payload.properties.aliases' port_payload.json)
+          echo aliases=$aliases >> $GITHUB_OUTPUT
+
+      - name: Get hosted zone entity
+        id: port-github-action
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          operation: GET
+          identifier: ${{ steps.parse-payload.outputs.hosted_zone }}
+          blueprint: hosted_zone
+
+      - name: Parse inputs and create TFVars file
+        run: |
+          FIRST_ALIAS=$(echo '${{ steps.parse-payload.outputs.aliases }}' | jq -r '.[0]')
+          HOSTED_ZONE_NAME=$(echo '${{ steps.port-github-action.outputs.entity }}' | jq -r '.title| sub("\\.$"; "")') #strip trailing dot
+          NAME="${FIRST_ALIAS}.${HOSTED_ZONE_NAME}" && echo "NAME=$NAME" >> $GITHUB_ENV
+
+          jq -r '.port_payload.payload.properties' port_payload.json > cloudfronts/tfvars/$NAME.tfvars.json
+
+      - name: Commit and TFVar file
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git checkout -b chore/cloudfront/add/$NAME.tfvars.json
+          git add cloudfronts/tfvars/$NAME.tfvars.json
+          git commit -m "Add new TFVar file for $NAME"
+
+      - name: Push branch
+        run: git push origin chore/cloudfront/add/$NAME.tfvars.json
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr create --head chore/cloudfront/add/$NAME.tfvars.json --title "Create CDN $NAME" --body "This PR adds a new TFVar file for creating a CDN for endpoint $NAME."

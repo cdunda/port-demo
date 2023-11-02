@@ -1,0 +1,3 @@
+---
+# auto: ["s3-buckets","cloudfronts"]
+version: 3
